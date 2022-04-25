@@ -16,14 +16,14 @@ func home(w http.ResponseWriter, r *http.Request) {
 	ts, err := template.ParseFiles("./ui/html/home.page.html")
 	if err != nil {
 		log.Println(err.Error())
-		http.Error(w, "Internal Server Error", 502)
+		http.Error(w, "Internal Server Error", http.StatusBadGateway)
 	}
 
 	err = ts.Execute(w, nil)
 
 	if err != nil {
 		log.Println(err.Error())
-		http.Error(w, "Internal Server Error", 502)
+		http.Error(w, "Internal Server Error", http.StatusHTTPVersionNotSupported)
 
 	}
 
@@ -43,7 +43,7 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Allow", http.MethodPost)
 		// w.WriteHeader(405)
 		// w.Write([]byte("Method not allowed"))
-		http.Error(w, "Method not allowed", 405)
+		http.Error(w, "Method not allowed", http.StatusBadGateway)
 		return
 	}
 	w.Write([]byte("Create a new snippet..."))
@@ -55,7 +55,7 @@ func editSnippet(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Allow", http.MethodPost) // Giving out which method is allowed
 		w.Header().Set("Cache-Control", "public, max-age=31536000")
 		w.Header().Get("Cache-Control")
-		http.Error(w, "Try again bruh", 405)
+		http.Error(w, "Try again bruh", http.StatusPaymentRequired)
 		return
 	}
 	w.Header().Get("Cache-Control")
