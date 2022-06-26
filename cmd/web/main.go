@@ -1,26 +1,39 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
+	"os"
 )
 
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+}
+
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
-	mux.HandleFunc("/snippet/edit", editSnippet)
+	// Flag in command line
+	addr := flag.String("addr", ":3000", "HTTP Network Address")
+	flag.Parse()
 
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
+	// Custom Log
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	// StripPrefix buat nge strip /static
-	// e.g /static/image.jpg bakal distrip jadi -> /image.jpg
-	// dari situ ntar server bakal ngirim file dari ".ui/static/image.jpg"
-	// https://stackoverflow.com/questions/27945310/why-do-i-need-to-use-http-stripprefix-to-access-my-static-files
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+	app := &application{
+		errorLog: errorLog,
+		infoLog:  infoLog,
+	}
 
-	log.Println("Starting server on http://localhost:3000")
-	err := http.ListenAndServe(":3000", mux)
-	log.Fatal(err)
+	mux := app.routes()
+	srv := &http.Server{
+		Addr:     *addr,
+		ErrorLog: errorLog,
+		Handler:  mux,
+	}
+
+	infoLog.Printf("Starting server on http://localhost%s", *addr)
+	err := srv.ListenAndServe()
+	errorLog.Fatal(err)
 }
